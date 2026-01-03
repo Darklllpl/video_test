@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Algorithm Video Human Evaluation</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f5f5f5;
+      color: #222;
+    }
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 16px 40px;
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+    .section-title {
+      font-weight: 600;
+      margin: 16px 0 8px;
+    }
+    .instructions {
+      background: #fff;
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-size: 14px;
+      line-height: 1.5;
+      border: 1px solid #e0e0e0;
+    }
+    .task-header {
+      margin-top: 24px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+    }
+    .task-header-main {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .task-subtitle {
+      font-size: 13px;
+      color: #666;
+    }
+    .video-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 12px;
+    }
+    .video-column {
+      flex: 1 1 380px;
+      min-width: 320px;
+      background: #fff;
+      border-radius: 6px;
+      border: 1px solid #e0e0e0;
+      padding: 8px 8px 12px;
+    }
+    .video-label {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    video {
+      width: 100%;
+      max-height: 360px;
+      background: #000;
+    }
+    .form-section {
+      margin-top: 16px;
+      background: #fff;
+      border-radius: 6px;
+      border: 1px solid #e0e0e0;
+      padding: 12px 16px 16px;
+    }
+    .form-row {
+      margin-top: 8px;
+      margin-bottom: 4px;
+    }
+    .defect-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 8px;
+    }
+    .defect-column {
+      min-width: 220px;
+    }
+    .defect-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    label {
+      font-size: 14px;
+    }
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+    .nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+      gap: 12px;
+    }
+    .nav-buttons {
+      display: flex;
+      gap: 8px;
+    }
+    button {
+      padding: 6px 12px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      background: #fafafa;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button.primary {
+      background: #1976d2;
+      border-color: #1976d2;
+      color: #fff;
+    }
+    button[disabled] {
+      opacity: 0.6;
+      cursor: default;
+    }
+    .status-text {
+      font-size: 13px;
+      color: #555;
+    }
+    .export-section {
+      margin-top: 24px;
+      background: #fff;
+      border-radius: 6px;
+      border: 1px solid #e0e0e0;
+      padding: 12px 16px 16px;
+      display: none;
+    }
+    textarea {
+      width: 100%;
+      min-height: 160px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>Algorithm Visualization Double-Blind Paired Evaluation</h1>
+    <div class="instructions">
+      <div><strong>说明 / Instructions：</strong></div>
+      <ul>
+        <li>每个任务 (task) 包含两段视频：<strong>Video A</strong> 和 <strong>Video B</strong>。</li>
+        <li>评审界面<strong>不展示方法名</strong>，只显示 A/B，对应哪种方法在后台随机。</li>
+        <li>任务顺序随机，A/B 对应的方法也在每个任务内随机。</li>
+        <li>你可以回放视频，但建议先完整看一遍再做选择，以控制整体时间。</li>
+        <li>每个任务需要：
+          <ul>
+            <li>在 <strong>Overall preference</strong> 中二选一（A 或 B）。</li>
+            <li>对 A 和 B 各自勾选存在的 <strong>Layout defects</strong> 和 <strong>Pacing defects</strong>（可以多选）。</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+
+    <div id="task-container" style="display:none;">
+      <div class="task-header">
+        <div class="task-header-main" id="task-title"></div>
+        <div class="task-subtitle" id="task-subtitle"></div>
+      </div>
+
+      <div class="video-row">
+        <div class="video-column">
+          <div class="video-label">Video A</div>
+          <video id="videoA" controls></video>
+        </div>
+        <div class="video-column">
+          <div class="video-label">Video B</div>
+          <video id="videoB" controls></video>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="section-title">(A) Overall preference（必须选择其一）</div>
+        <div class="form-row">
+          <label>
+            <input type="radio" name="overall" value="A" />
+            Video A 更好
+          </label>
+        </div>
+        <div class="form-row">
+          <label>
+            <input type="radio" name="overall" value="B" />
+            Video B 更好
+          </label>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="section-title">(C) 缺陷勾选 / Defect annotations</div>
+        <div class="form-row"><strong>请分别对 A 和 B 勾选存在的缺陷（可多选）。</strong></div>
+
+        <div class="defect-group">
+          <div class="defect-column">
+            <div class="defect-title">Video A - Layout defects</div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="A_layout_overlap" />
+              <label for="A_layout_overlap">Overlap / 遮挡</label>
+            </div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="A_layout_misalign" />
+              <label for="A_layout_misalign">Misalignment / 对齐问题</label>
+            </div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="A_layout_smalltext" />
+              <label for="A_layout_smalltext">Text too small / 文字太小</label>
+            </div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="A_layout_clutter" />
+              <label for="A_layout_clutter">Clutter / 画面拥挤</label>
+            </div>
+          </div>
+
+          <div class="defect-column">
+            <div class="defect-title">Video A - Pacing defects</div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="A_pacing_rapid" />
+              <label for="A_pacing_rapid">Too many rapid transitions / 过多快速切换</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="defect-group">
+          <div class="defect-column">
+            <div class="defect-title">Video B - Layout defects</div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="B_layout_overlap" />
+              <label for="B_layout_overlap">Overlap / 遮挡</label>
+            </div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="B_layout_misalign" />
+              <label for="B_layout_misalign">Misalignment / 对齐问题</label>
+            </div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="B_layout_smalltext" />
+              <label for="B_layout_smalltext">Text too small / 文字太小</label>
+            </div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="B_layout_clutter" />
+              <label for="B_layout_clutter">Clutter / 画面拥挤</label>
+            </div>
+          </div>
+
+          <div class="defect-column">
+            <div class="defect-title">Video B - Pacing defects</div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="B_pacing_rapid" />
+              <label for="B_pacing_rapid">Too many rapid transitions / 过多快速切换</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-bar">
+        <div class="status-text" id="progress-text"></div>
+        <div class="nav-buttons">
+          <button id="prev-btn">Previous</button>
+          <button id="next-btn" class="primary">Next</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="finished-message" class="export-section">
+      <div class="section-title">所有任务已完成 / All tasks completed</div>
+      <p style="font-size:14px;">
+        下方为本次评估的原始记录（JSON）。请复制保存到文件，或使用“Download JSON”按钮下载。
+      </p>
+      <button id="download-btn">Download JSON</button>
+      <p></p>
+      <textarea id="export-text" readonly></textarea>
+    </div>
+  </div>
+
+  <script>
+    // ===== 实验配置 =====
+    // 参与对比的两个方法（只在导出的 JSON 中出现，界面不展示方法名）
+    const METHODS = [
+      { id: "ours", dir: "ours" },
+      { id: "manim_direct", dir: "manim_direct" },
+    ];
+
+    // 任务列表：来自 exp/human 下的 25 个样本（基于文件名）
+    const TASK_IDS = [
+      "array_leetcode_204_seed_01",
+      "array_leetcode_410_seed_01",
+      "array_leetcode_453_seed_02",
+      "array_leetcode_475_seed_01",
+      "array_leetcode_477_seed_02",
+      "dp_leetcode_1000_seed_01",
+      "dp_leetcode_1143_seed_01",
+      "dp_leetcode_1262_seed_01",
+      "dp_leetcode_416_seed_02",
+      "dp_leetcode_823_seed_01",
+      "graph_leetcode_211_seed_01",
+      "graph_leetcode_433_seed_01",
+      "graph_leetcode_834_seed_01",
+      "graph_leetcode_924_seed_01",
+      "graph_leetcode_994_seed_01",
+      "hashtable_leetcode_1189_seed_01",
+      "hashtable_leetcode_205_seed_01",
+      "hashtable_leetcode_290_seed_01",
+      "hashtable_leetcode_387_seed_01",
+      "hashtable_leetcode_705_seed_01",
+      "sorting_leetcode_1029_seed_01",
+      "sorting_leetcode_1122_seed_01",
+      "sorting_leetcode_1337_seed_01",
+      "sorting_leetcode_1365_seed_01",
+      "sorting_leetcode_179_seed_02",
+    ];
+
+    // ===== 实验逻辑 =====
+    function shuffle(array) {
+      const arr = array.slice();
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    // 构造带有 A/B 随机映射的任务列表
+    const baseTasks = TASK_IDS.map((taskId, index) => {
+      const flip = Math.random() < 0.5;
+      const A = flip ? METHODS[0] : METHODS[1];
+      const B = flip ? METHODS[1] : METHODS[0];
+      return {
+        index,
+        taskId,
+        A_method: A.id,
+        B_method: B.id,
+      };
+    });
+
+    // 随机打乱任务顺序
+    const tasks = shuffle(baseTasks);
+
+    let currentTaskIdx = 0;
+    const totalTasks = tasks.length;
+    const responses = {}; // key: original index, value: response object
+
+    const taskContainer = document.getElementById("task-container");
+    const finishedMessage = document.getElementById("finished-message");
+    const taskTitle = document.getElementById("task-title");
+    const taskSubtitle = document.getElementById("task-subtitle");
+    const videoA = document.getElementById("videoA");
+    const videoB = document.getElementById("videoB");
+    const progressText = document.getElementById("progress-text");
+    const prevBtn = document.getElementById("prev-btn");
+    const nextBtn = document.getElementById("next-btn");
+    const exportText = document.getElementById("export-text");
+    const downloadBtn = document.getElementById("download-btn");
+
+    function clearForm() {
+      // overall
+      document.querySelectorAll('input[name="overall"]').forEach(el => {
+        el.checked = false;
+      });
+      // defects A/B
+      ["A", "B"].forEach(prefix => {
+        ["layout_overlap", "layout_misalign", "layout_smalltext", "layout_clutter", "pacing_rapid"].forEach(suffix => {
+          const id = `${prefix}_${suffix}`;
+          const el = document.getElementById(id);
+          if (el) el.checked = false;
+        });
+      });
+    }
+
+    function restoreForm(response) {
+      if (!response) {
+        clearForm();
+        return;
+      }
+      // overall
+      const overall = response.overall;
+      if (overall === "A" || overall === "B") {
+        const el = document.querySelector(`input[name="overall"][value="${overall}"]`);
+        if (el) el.checked = true;
+      }
+      // defects
+      ["A", "B"].forEach(prefix => {
+        const r = prefix === "A" ? response.defects_A : response.defects_B;
+        if (!r) return;
+        (r.layout || []).forEach(code => {
+          const el = document.getElementById(`${prefix}_${code}`);
+          if (el) el.checked = true;
+        });
+        (r.pacing || []).forEach(code => {
+          const el = document.getElementById(`${prefix}_${code}`);
+          if (el) el.checked = true;
+        });
+      });
+    }
+
+    function gatherResponse(task) {
+      const overallEl = document.querySelector('input[name="overall"]:checked');
+      if (!overallEl) {
+        alert("请先在 Overall preference 中选择 A 或 B。");
+        return null;
+      }
+      const overall = overallEl.value;
+
+      function collectFor(prefix) {
+        const layout = [];
+        const pacing = [];
+        if (document.getElementById(`${prefix}_layout_overlap`).checked) layout.push("layout_overlap");
+        if (document.getElementById(`${prefix}_layout_misalign`).checked) layout.push("layout_misalign");
+        if (document.getElementById(`${prefix}_layout_smalltext`).checked) layout.push("layout_smalltext");
+        if (document.getElementById(`${prefix}_layout_clutter`).checked) layout.push("layout_clutter");
+        if (document.getElementById(`${prefix}_pacing_rapid`).checked) pacing.push("pacing_rapid");
+        return { layout, pacing };
+      }
+
+      return {
+        taskId: task.taskId,
+        originalIndex: task.index,
+        A_method: task.A_method,
+        B_method: task.B_method,
+        overall, // "A" or "B"
+        defects_A: collectFor("A"),
+        defects_B: collectFor("B"),
+      };
+    }
+
+    function renderTask() {
+      if (currentTaskIdx < 0) currentTaskIdx = 0;
+      if (currentTaskIdx >= totalTasks) currentTaskIdx = totalTasks - 1;
+
+      const task = tasks[currentTaskIdx];
+
+      taskContainer.style.display = "block";
+      finishedMessage.style.display = "none";
+
+      taskTitle.textContent = `Task ${currentTaskIdx + 1} / ${totalTasks}`;
+      taskSubtitle.textContent = task.taskId;
+
+      const basePath = "."; // index.html 与视频在同一层级下的子目录中
+      const videoAPath = `${basePath}/${task.A_method}/${task.taskId}.mp4`;
+      const videoBPath = `${basePath}/${task.B_method}/${task.taskId}.mp4`;
+
+      videoA.src = videoAPath;
+      videoB.src = videoBPath;
+
+      progressText.textContent = `当前任务：${currentTaskIdx + 1} / ${totalTasks}`;
+
+      prevBtn.disabled = currentTaskIdx === 0;
+      nextBtn.textContent = currentTaskIdx === totalTasks - 1 ? "Finish" : "Next";
+
+      const existing = responses[task.index];
+      restoreForm(existing);
+    }
+
+    function showFinished() {
+      taskContainer.style.display = "none";
+      finishedMessage.style.display = "block";
+
+      const all = Object.values(responses).sort((a, b) => a.originalIndex - b.originalIndex);
+      const payload = {
+        methods: METHODS.map(m => m.id),
+        tasks: TASK_IDS,
+        responses: all,
+      };
+      const json = JSON.stringify(payload, null, 2);
+      exportText.value = json;
+    }
+
+    prevBtn.addEventListener("click", () => {
+      if (currentTaskIdx <= 0) return;
+      // 保存当前任务进度（允许先选 preference 再返回修改）
+      const task = tasks[currentTaskIdx];
+      const resp = gatherResponse(task);
+      if (resp) {
+        responses[task.index] = resp;
+      }
+      currentTaskIdx -= 1;
+      renderTask();
+    });
+
+    nextBtn.addEventListener("click", () => {
+      const task = tasks[currentTaskIdx];
+      const resp = gatherResponse(task);
+      if (!resp) return;
+      responses[task.index] = resp;
+
+      if (currentTaskIdx === totalTasks - 1) {
+        showFinished();
+      } else {
+        currentTaskIdx += 1;
+        renderTask();
+      }
+    });
+
+    downloadBtn.addEventListener("click", () => {
+      const text = exportText.value || "";
+      const blob = new Blob([text], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, "0");
+      const d = String(now.getDate()).padStart(2, "0");
+      a.download = `human_eval_results_${y}${m}${d}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    // 初始渲染
+    renderTask();
+  </script>
+</body>
+</html>
