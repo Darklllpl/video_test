@@ -207,7 +207,7 @@
       </div>
 
       <div class="form-section">
-        <div class="section-title">(C) 缺陷勾选 / Defect annotations</div>
+        <div class="section-title">(B) 缺陷勾选 / Defect annotations</div>
         <div class="form-row"><strong>请分别对 A 和 B 勾选存在的缺陷（可多选）。</strong></div>
 
         <div class="defect-group">
@@ -222,25 +222,11 @@
               <label for="A_layout_misalign">Misalignment / 对齐问题</label>
             </div>
             <div class="checkbox-row">
-              <input type="checkbox" id="A_layout_smalltext" />
-              <label for="A_layout_smalltext">Text too small / 文字太小</label>
-            </div>
-            <div class="checkbox-row">
               <input type="checkbox" id="A_layout_clutter" />
               <label for="A_layout_clutter">Clutter / 画面拥挤</label>
             </div>
           </div>
 
-          <div class="defect-column">
-            <div class="defect-title">Video A - Pacing defects</div>
-            <div class="checkbox-row">
-              <input type="checkbox" id="A_pacing_rapid" />
-              <label for="A_pacing_rapid">Too many rapid transitions / 过多快速切换</label>
-            </div>
-          </div>
-        </div>
-
-        <div class="defect-group">
           <div class="defect-column">
             <div class="defect-title">Video B - Layout defects</div>
             <div class="checkbox-row">
@@ -252,20 +238,8 @@
               <label for="B_layout_misalign">Misalignment / 对齐问题</label>
             </div>
             <div class="checkbox-row">
-              <input type="checkbox" id="B_layout_smalltext" />
-              <label for="B_layout_smalltext">Text too small / 文字太小</label>
-            </div>
-            <div class="checkbox-row">
               <input type="checkbox" id="B_layout_clutter" />
               <label for="B_layout_clutter">Clutter / 画面拥挤</label>
-            </div>
-          </div>
-
-          <div class="defect-column">
-            <div class="defect-title">Video B - Pacing defects</div>
-            <div class="checkbox-row">
-              <input type="checkbox" id="B_pacing_rapid" />
-              <label for="B_pacing_rapid">Too many rapid transitions / 过多快速切换</label>
             </div>
           </div>
         </div>
@@ -377,7 +351,7 @@
       });
       // defects A/B
       ["A", "B"].forEach(prefix => {
-        ["layout_overlap", "layout_misalign", "layout_smalltext", "layout_clutter", "pacing_rapid"].forEach(suffix => {
+        ["layout_overlap", "layout_misalign", "layout_clutter"].forEach(suffix => {
           const id = `${prefix}_${suffix}`;
           const el = document.getElementById(id);
           if (el) el.checked = false;
@@ -424,9 +398,7 @@
         const pacing = [];
         if (document.getElementById(`${prefix}_layout_overlap`).checked) layout.push("layout_overlap");
         if (document.getElementById(`${prefix}_layout_misalign`).checked) layout.push("layout_misalign");
-        if (document.getElementById(`${prefix}_layout_smalltext`).checked) layout.push("layout_smalltext");
         if (document.getElementById(`${prefix}_layout_clutter`).checked) layout.push("layout_clutter");
-        if (document.getElementById(`${prefix}_pacing_rapid`).checked) pacing.push("pacing_rapid");
         return { layout, pacing };
       }
 
